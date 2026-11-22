@@ -1,5 +1,5 @@
 /* Offline cache: bump VERSION after editing any file */
-const VERSION = 'rajoul-mafia-v2';
+const VERSION = 'rajoul-mafia-v3';
 const FILES = ['./', './index.html', './style.css', './script.js', './icons.js',
   './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
