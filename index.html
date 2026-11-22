@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>RAJOUL MAFIA</title>
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="RAJOUL MAFIA">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    // Apply the saved theme before first paint to avoid a flash
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('mafia-theme'); } catch (e) {}
+      if (t !== 'light' && t !== 'dark') {
+        t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 class="brand">RAJOUL MAFIA</h1>
+      <div class="topbar-actions">
+        <button type="button" id="add-player-btn" class="btn small" hidden>Add player</button>
+        <button type="button" id="theme-toggle" class="icon-btn" aria-label="Switch theme"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app">
+
+    <!-- SETUP: everything on one page -->
+    <section id="screen-setup" class="screen">
+      <div class="setup-grid">
+        <div class="col">
+          <div class="card">
+            <h2>Players</h2>
+            <p class="sub">Add or remove players. Name fields appear and disappear automatically.</p>
+            <div class="stepper">
+              <button type="button" id="count-minus" class="step-btn" aria-label="Remove a player">−</button>
+              <input id="count-input" type="number" min="3" step="1" inputmode="numeric" aria-label="Total players">
+              <button type="button" id="count-plus" class="step-btn" aria-label="Add a player">+</button>
+            </div>
+            <p class="note" id="count-note">Minimum 3 players. No maximum.</p>
+          </div>
+
+          <div class="card">
+            <h2>Roles</h2>
+            <p class="sub">Citizens fill every seat that has no other role.</p>
+            <div id="roles-list" class="roles-list"></div>
+            <div class="messages" id="roles-messages" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="card">
+            <h2>Names</h2>
+            <p class="sub">Use the order you will pass the device.</p>
+            <div id="names-list" class="names-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="startbar">
+        <div class="startbar-inner">
+          <p id="status-text" class="status" aria-live="polite"></p>
+          <button type="button" id="start-game" class="btn primary">Start game</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PASS -->
+    <section id="screen-pass" class="screen center" hidden>
+      <div class="center-inner">
+        <p class="progress-label" id="progress-text"></p>
+        <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+        <p class="pass-small">Pass to</p>
+        <h2 class="pass-name" id="pass-name"></h2>
+        <p class="note">Make sure only this player can see the screen.</p>
+        <div class="actions">
+          <button type="button" id="reveal-btn" class="btn primary big">Reveal role</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROLE (content only exists while visible) -->
+    <section id="screen-reveal" class="screen center" hidden>
+      <div class="center-inner">
+        <p class="progress-label" id="reveal-progress"></p>
+        <div id="role-card-slot"></div>
+        <div class="actions">
+          <button type="button" id="next-btn" class="btn primary big">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- END -->
+    <section id="screen-end" class="screen" hidden>
+      <div class="end-head">
+        <h2>All roles are handed out</h2>
+        <p class="sub">Narrator: press and hold a card to see that player’s role. Release to hide it.</p>
+      </div>
+      <div id="legend" class="legend"></div>
+      <div id="players-grid" class="players-grid"></div>
+      <div class="actions row">
+        <button type="button" id="edit-btn" class="btn big">Edit players and roles</button>
+        <button type="button" id="replay-btn" class="btn primary big">Replay with same setup</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Add player while revealing roles -->
+  <div id="add-modal" class="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="add-title">
+      <h2 id="add-title">Add a player</h2>
+      <p class="sub">Players who already saw their role keep it. The remaining roles are shuffled again.</p>
+      <input id="add-name" type="text" maxlength="30" autocomplete="off" placeholder="Player name" aria-label="New player name">
+      <p id="add-error" class="msg error" hidden></p>
+      <div class="actions row">
+        <button type="button" id="add-cancel" class="btn">Cancel</button>
+        <button type="button" id="add-confirm" class="btn primary">Add player</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Install prompt: shown only the first time -->
+  <div id="install-banner" class="install-banner" role="dialog" aria-labelledby="install-title" hidden>
+    <div class="install-text">
+      <strong id="install-title">Install RAJOUL MAFIA</strong>
+      <p id="install-desc"></p>
+    </div>
+    <div class="install-actions">
+      <button type="button" id="install-dismiss" class="btn small">Not now</button>
+      <button type="button" id="install-btn" class="btn small primary">Install</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="icons.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Offline support (needs https or localhost; skipped when opened as a plain file)
+    if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+    }
+  </script>
+</body>
+</html>
